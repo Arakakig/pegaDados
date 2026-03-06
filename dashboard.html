@@ -60,6 +60,12 @@
       margin-top: 0.35rem;
     }
 
+    .last-updated {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+
     .kpis {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -169,6 +175,168 @@
     .mono {
       font-family: 'JetBrains Mono', monospace;
     }
+
+    .filters {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: flex-end;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .filter-group label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .filters input[type="date"],
+    .filters input[type="text"],
+    .filters select {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 0.5rem 0.75rem;
+      font-size: 0.9rem;
+      font-family: inherit;
+      min-width: 140px;
+    }
+
+    .filters select {
+      cursor: pointer;
+      max-width: 220px;
+    }
+
+    .filters input[type="text"] {
+      min-width: 180px;
+    }
+
+    .filters input:focus,
+    .filters select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .btn {
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .btn:hover {
+      background: var(--accent-dim);
+      color: var(--text);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-muted);
+    }
+
+    .btn-ghost:hover {
+      color: var(--accent);
+    }
+
+    .compare-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .compare-toggle input {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: var(--accent);
+    }
+
+    .compare-periods {
+      display: none;
+      width: 100%;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 0.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .compare-periods.visible {
+      display: flex;
+    }
+
+    .compare-periods .filter-group { min-width: 120px; }
+
+    .table-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+      margin-bottom: 1rem;
+      justify-content: space-between;
+    }
+
+    .table-toolbar .filter-group { margin-bottom: 0; }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .pagination button {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.4rem 0.75rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .pagination button:hover:not(:disabled) {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .pagination button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .pagination .page-info {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin: 0 0.25rem;
+    }
+
+    .pagination select {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.35rem 0.5rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -176,11 +344,41 @@
     <header>
       <h1>Dashboard — Sepultamentos</h1>
       <p class="subtitle">Dados da aba &quot;Ontem&quot; — SCS Web</p>
+      <p class="last-updated" id="last-updated">Última atualização: —</p>
     </header>
 
     <div id="loading" class="loading">Carregando dados...</div>
     <div id="error" class="error" style="display: none;"></div>
     <div id="app" style="display: none;">
+      <section class="filters">
+        <div class="filter-group">
+          <label>Data falec. de</label>
+          <input type="date" id="filter-data-de" />
+        </div>
+        <div class="filter-group">
+          <label>Data falec. até</label>
+          <input type="date" id="filter-data-ate" />
+        </div>
+        <div class="filter-group">
+          <label>Funerária</label>
+          <select id="filter-funeraria">
+            <option value="">Todas</option>
+          </select>
+        </div>
+        <div class="compare-toggle">
+          <input type="checkbox" id="compare-mode" />
+          <label for="compare-mode">Comparar por período</label>
+        </div>
+        <div class="compare-periods" id="compare-periods">
+          <div class="filter-group"><label>Período 1 — De</label><input type="date" id="p1-de" /></div>
+          <div class="filter-group"><label>Período 1 — Até</label><input type="date" id="p1-ate" /></div>
+          <div class="filter-group"><label>Período 2 — De</label><input type="date" id="p2-de" /></div>
+          <div class="filter-group"><label>Período 2 — Até</label><input type="date" id="p2-ate" /></div>
+        </div>
+        <button type="button" class="btn" id="btn-aplicar">Aplicar</button>
+        <button type="button" class="btn btn-ghost" id="btn-limpar">Limpar filtros</button>
+      </section>
+
       <div class="kpis">
         <div class="kpi">
           <div class="kpi__value" id="total-registros">0</div>
@@ -228,6 +426,23 @@
 
       <div class="card" style="margin-top: 1.5rem;">
         <h2 class="card__title">Lista de registros</h2>
+        <div class="table-toolbar">
+          <div class="filter-group">
+            <label>Buscar por nome</label>
+            <input type="text" id="table-search" placeholder="Digite para filtrar..." />
+          </div>
+          <div class="pagination">
+            <select id="page-size">
+              <option value="10">10 por página</option>
+              <option value="20" selected>20 por página</option>
+              <option value="50">50 por página</option>
+              <option value="100">100 por página</option>
+            </select>
+            <button type="button" id="btn-prev" aria-label="Página anterior">‹ Anterior</button>
+            <span class="page-info" id="page-info">Página 1 de 1</span>
+            <button type="button" id="btn-next" aria-label="Próxima página">Próxima ›</button>
+          </div>
+        </div>
         <div class="table-wrap">
           <table>
             <thead>
@@ -252,13 +467,61 @@
       const errorEl = document.getElementById('error');
       const app = document.getElementById('app');
 
+      let rawData = [];
+      let keys = {};
+      const chartRefs = {};
+      const accentColors = [
+        '#c9a227', '#a68b3c', '#8b7324', '#6b5a1e', '#5a4d1a',
+        '#4a8b5c', '#3d7550', '#2e5c3d', '#7a6b3a', '#9a8b4a'
+      ];
+      const accentCompare = ['#c9a227', '#4a8b5c'];
+
       function getKey(obj, ...candidates) {
-        const keys = Object.keys(obj || {});
+        const keyList = Object.keys(obj || {});
         for (const c of candidates) {
-          const found = keys.find(k => k.includes(c) || k === c);
+          const found = keyList.find(k => k.includes(c) || k === c);
           if (found) return found;
         }
         return candidates[0];
+      }
+
+      function parseDateStr(str) {
+        if (!str || !str.trim()) return null;
+        const s = str.trim();
+        const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (m) return new Date(parseInt(m[3],10), parseInt(m[2],10)-1, parseInt(m[1],10));
+        return null;
+      }
+
+      function toYMD(d) {
+        if (!d || !(d instanceof Date)) return '';
+        const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0');
+        return y + '-' + m + '-' + day;
+      }
+
+      function dataInRange(item, keyFalecimento, de, ate) {
+        const d = parseDateStr(item[keyFalecimento]);
+        if (!d) return false;
+        if (de && d < de) return false;
+        if (ate && d > ate) return false;
+        return true;
+      }
+
+      function getFilteredData() {
+        const dataDe = document.getElementById('filter-data-de').value ? new Date(document.getElementById('filter-data-de').value + 'T00:00:00') : null;
+        const dataAte = document.getElementById('filter-data-ate').value ? new Date(document.getElementById('filter-data-ate').value + 'T23:59:59') : null;
+        const funeraria = (document.getElementById('filter-funeraria').value || '').trim();
+        return rawData.filter(item => {
+          if (!dataInRange(item, keys.falecimento, dataDe, dataAte)) return false;
+          if (funeraria && (item[keys.funeraria] || '').trim() !== funeraria) return false;
+          return true;
+        });
+      }
+
+      function getPeriodData(deStr, ateStr) {
+        const de = deStr ? new Date(deStr + 'T00:00:00') : null;
+        const ate = ateStr ? new Date(ateStr + 'T23:59:59') : null;
+        return rawData.filter(item => dataInRange(item, keys.falecimento, de, ate));
       }
 
       function agruparContagem(dados, key) {
@@ -270,142 +533,296 @@
         return Object.entries(map).sort((a, b) => b[1] - a[1]);
       }
 
+      function destroyChart(id) {
+        if (chartRefs[id] && typeof chartRefs[id].destroy === 'function') {
+          chartRefs[id].destroy();
+          chartRefs[id] = null;
+        }
+      }
+
+      function createBarChart(canvasId, labels, values, title, color) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        destroyChart(canvasId);
+        const ctx = canvas.getContext('2d');
+        chartRefs[canvasId] = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels.map(l => (l && l.length > 35) ? l.slice(0, 32) + '…' : (l || '')),
+            datasets: [{
+              label: title,
+              data: values,
+              backgroundColor: color || accentColors[0],
+              borderColor: 'transparent',
+              borderWidth: 0,
+              borderRadius: 6,
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#9b9893', font: { size: 11 } } },
+              y: { grid: { display: false }, ticks: { color: '#9b9893', font: { size: 11 }, maxRotation: 0 } }
+            }
+          }
+        });
+      }
+
+      function createBarChartCompare(canvasId, labels, values1, values2, label1, label2) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        destroyChart(canvasId);
+        const ctx = canvas.getContext('2d');
+        const lab = labels.map(l => (l && l.length > 30) ? l.slice(0, 27) + '…' : (l || ''));
+        chartRefs[canvasId] = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: lab,
+            datasets: [
+              { label: label1, data: values1, backgroundColor: accentCompare[0], borderRadius: 6 },
+              { label: label2, data: values2, backgroundColor: accentCompare[1], borderRadius: 6 }
+            ]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#9b9893' } } },
+            scales: {
+              x: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#9b9893', font: { size: 11 } } },
+              y: { grid: { display: false }, ticks: { color: '#9b9893', font: { size: 11 } } }
+            }
+          }
+        });
+      }
+
+      function createPieChart(canvasId, labels, values) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        destroyChart(canvasId);
+        const ctx = canvas.getContext('2d');
+        chartRefs[canvasId] = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: labels.map(l => (l && l.length > 30) ? l.slice(0, 27) + '…' : (l || '')),
+            datasets: [{
+              data: values,
+              backgroundColor: accentColors.slice(0, labels.length),
+              borderColor: 'var(--surface)',
+              borderWidth: 2,
+              hoverOffset: 4
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'right', labels: { color: '#9b9893', font: { size: 11 }, padding: 8 } } }
+          }
+        });
+      }
+
+      function updateCharts() {
+        const compare = document.getElementById('compare-mode').checked;
+        const filtered = getFilteredData();
+
+        if (compare) {
+          const p1De = document.getElementById('p1-de').value;
+          const p1Ate = document.getElementById('p1-ate').value;
+          const p2De = document.getElementById('p2-de').value;
+          const p2Ate = document.getElementById('p2-ate').value;
+          const d1 = getPeriodData(p1De, p1Ate);
+          const d2 = getPeriodData(p2De, p2Ate);
+          const agg1F = agruparContagem(d1, keys.funeraria);
+          const agg2F = agruparContagem(d2, keys.funeraria);
+          const agg1C = agruparContagem(d1, keys.sepultamento);
+          const agg2C = agruparContagem(d2, keys.sepultamento);
+          const allLabelsF = [...new Set([...agg1F.map(x=>x[0]), ...agg2F.map(x=>x[0])])];
+          const allLabelsC = [...new Set([...agg1C.map(x=>x[0]), ...agg2C.map(x=>x[0])])];
+          const map1F = Object.fromEntries(agg1F); const map2F = Object.fromEntries(agg2F);
+          const map1C = Object.fromEntries(agg1C); const map2C = Object.fromEntries(agg2C);
+          const v1F = allLabelsF.map(l => map1F[l] || 0);
+          const v2F = allLabelsF.map(l => map2F[l] || 0);
+          const v1C = allLabelsC.map(l => map1C[l] || 0);
+          const v2C = allLabelsC.map(l => map2C[l] || 0);
+          try {
+            createBarChartCompare('chart-funeraria', allLabelsF, v1F, v2F, 'Período 1', 'Período 2');
+            createBarChartCompare('chart-cemiterio', allLabelsC, v1C, v2C, 'Período 1', 'Período 2');
+          } catch (e) { console.error(e); }
+          document.getElementById('chart-data').closest('.card').style.display = 'none';
+          document.getElementById('chart-top5').closest('.card').style.display = 'none';
+        } else {
+          document.getElementById('chart-data').closest('.card').style.display = '';
+          document.getElementById('chart-top5').closest('.card').style.display = '';
+          const porFuneraria = agruparContagem(filtered, keys.funeraria);
+          const porCemiterio = agruparContagem(filtered, keys.sepultamento);
+          const porData = agruparContagem(filtered, keys.falecimento);
+          const top5 = porFuneraria.slice(0, 5);
+          try {
+            createBarChart('chart-funeraria', porFuneraria.map(x=>x[0]), porFuneraria.map(x=>x[1]), 'Sepultamentos', accentColors[0]);
+            createBarChart('chart-cemiterio', porCemiterio.map(x=>x[0]), porCemiterio.map(x=>x[1]), 'Sepultamentos', accentColors[2]);
+            createBarChart('chart-data', porData.map(x=>x[0]), porData.map(x=>x[1]), 'Quantidade', accentColors[1]);
+            createPieChart('chart-top5', top5.map(x=>x[0]), top5.map(x=>x[1]));
+          } catch (e) { console.error(e); }
+        }
+      }
+
+      function updateKPIs() {
+        const filtered = getFilteredData();
+        document.getElementById('total-registros').textContent = filtered.length;
+        const funerarias = new Set(filtered.map(d => (d[keys.funeraria] || '').trim()));
+        const cemiterios = new Set(filtered.map(d => (d[keys.sepultamento] || '').trim()));
+        document.getElementById('total-funerarias').textContent = funerarias.size;
+        document.getElementById('total-cemiterios').textContent = cemiterios.size;
+      }
+
+      let currentPage = 1;
+      let pageSize = 20;
+
+      function getTableData() {
+        const filtered = getFilteredData();
+        const search = (document.getElementById('table-search').value || '').trim().toLowerCase();
+        let list = search
+          ? filtered.filter(r => (r[keys.nome] || '').toLowerCase().includes(search))
+          : filtered;
+        return list;
+      }
+
+      function renderTable() {
+        pageSize = parseInt(document.getElementById('page-size').value, 10) || 20;
+        const list = getTableData();
+        const total = list.length;
+        const totalPages = Math.max(1, Math.ceil(total / pageSize));
+        if (currentPage > totalPages) currentPage = totalPages;
+        const start = (currentPage - 1) * pageSize;
+        const page = list.slice(start, start + pageSize);
+
+        const tbody = document.getElementById('table-body');
+        tbody.innerHTML = page.map((row, i) => `
+          <tr>
+            <td class="mono">${start + i + 1}</td>
+            <td>${escapeHtml(row[keys.nome] || '-')}</td>
+            <td class="mono">${escapeHtml(row[keys.falecimento] || '-')}</td>
+            <td>${escapeHtml(row[keys.funeraria] || '-')}</td>
+            <td>${escapeHtml(row[keys.sepultamento] || '-')}</td>
+          </tr>
+        `).join('');
+
+        document.getElementById('page-info').textContent = `Página ${currentPage} de ${totalPages} (${total} registros)`;
+        document.getElementById('btn-prev').disabled = currentPage <= 1;
+        document.getElementById('btn-next').disabled = currentPage >= totalPages;
+      }
+
+      function escapeHtml(s) {
+        const div = document.createElement('div');
+        div.textContent = s;
+        return div.innerHTML;
+      }
+
+      function applyFilters() {
+        updateKPIs();
+        updateCharts();
+        currentPage = 1;
+        renderTable();
+      }
+
+      function fillFunerariaSelect() {
+        const set = new Set(rawData.map(d => (d[keys.funeraria] || '').trim()).filter(Boolean));
+        const sel = document.getElementById('filter-funeraria');
+        const cur = sel.value;
+        sel.innerHTML = '<option value="">Todas</option>' + [...set].sort().map(f => `<option value="${String(f).replace(/&/g,'&amp;').replace(/"/g,'&quot;')}">${escapeHtml(f.length > 50 ? f.slice(0,47)+'…' : f)}</option>`).join('');
+        if (cur && set.has(cur)) sel.value = cur;
+      }
+
+      function setDefaultDates() {
+        const dates = rawData.map(d => parseDateStr(d[keys.falecimento])).filter(Boolean);
+        if (dates.length === 0) return;
+        const min = new Date(Math.min(...dates.map(d => d.getTime())));
+        const max = new Date(Math.max(...dates.map(d => d.getTime())));
+        const elDe = document.getElementById('filter-data-de');
+        const elAte = document.getElementById('filter-data-ate');
+        if (!elDe.value) elDe.value = toYMD(min);
+        if (!elAte.value) elAte.value = toYMD(max);
+      }
+
+      function formatLastModified(headerValue) {
+        if (!headerValue) return null;
+        const d = new Date(headerValue);
+        if (isNaN(d.getTime())) return null;
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+        const h = String(d.getHours()).padStart(2, '0');
+        const min = String(d.getMinutes()).padStart(2, '0');
+        return day + '/' + month + '/' + year + ' às ' + h + ':' + min;
+      }
+
       function init() {
         fetch('dados_ontem.json')
           .then(r => {
-            if (!r.ok) throw new Error('Arquivo dados_ontem.json não encontrado. Execute o script.js primeiro.');
-            return r.json();
+            if (!r.ok) throw new Error('Arquivo dados_ontem.json não encontrado.');
+            const lastMod = r.headers.get('Last-Modified');
+            return r.json().then(dados => ({ dados, lastMod }));
           })
-          .then(dados => {
-            if (!Array.isArray(dados) || dados.length === 0) {
-              throw new Error('Nenhum registro em dados_ontem.json.');
-            }
+          .then(({ dados, lastMod }) => {
+            if (!Array.isArray(dados) || dados.length === 0) throw new Error('Nenhum registro em dados_ontem.json.');
+            rawData = dados;
+            const el = document.getElementById('last-updated');
+            const formatted = formatLastModified(lastMod);
+            el.textContent = 'Última atualização: ' + (formatted || '—');
+            keys = {
+              funeraria: getKey(dados[0], 'FunerÃ¡ria', 'Funerária', 'Funer'),
+              sepultamento: getKey(dados[0], 'Local do Sepultamento', 'Sepultamento'),
+              falecimento: getKey(dados[0], 'Data de Falecimento', 'Falecimento'),
+              nome: getKey(dados[0], 'Nome')
+            };
             loading.style.display = 'none';
             app.style.display = 'block';
-            render(dados);
+            fillFunerariaSelect();
+            setDefaultDates();
+            document.getElementById('compare-mode').addEventListener('change', function() {
+              document.getElementById('compare-periods').classList.toggle('visible', this.checked);
+              applyFilters();
+            });
+            document.getElementById('btn-aplicar').addEventListener('click', applyFilters);
+            document.getElementById('btn-limpar').addEventListener('click', function() {
+              document.getElementById('filter-data-de').value = '';
+              document.getElementById('filter-data-ate').value = '';
+              document.getElementById('filter-funeraria').value = '';
+              document.getElementById('compare-mode').checked = false;
+              document.getElementById('compare-periods').classList.remove('visible');
+              document.getElementById('p1-de').value = '';
+              document.getElementById('p1-ate').value = '';
+              document.getElementById('p2-de').value = '';
+              document.getElementById('p2-ate').value = '';
+              setDefaultDates();
+              applyFilters();
+            });
+            document.getElementById('table-search').addEventListener('input', function() {
+              currentPage = 1;
+              renderTable();
+            });
+            document.getElementById('page-size').addEventListener('change', function() {
+              pageSize = parseInt(this.value, 10);
+              currentPage = 1;
+              renderTable();
+            });
+            document.getElementById('btn-prev').addEventListener('click', function() {
+              if (currentPage > 1) { currentPage--; renderTable(); }
+            });
+            document.getElementById('btn-next').addEventListener('click', function() {
+              const list = getTableData();
+              if (currentPage < Math.ceil(list.length / pageSize)) { currentPage++; renderTable(); }
+            });
+            applyFilters();
           })
           .catch(err => {
             loading.style.display = 'none';
             errorEl.style.display = 'block';
             errorEl.textContent = err.message || 'Erro ao carregar dados.';
           });
-      }
-
-      const accentColors = [
-        '#c9a227', '#a68b3c', '#8b7324', '#6b5a1e', '#5a4d1a',
-        '#4a8b5c', '#3d7550', '#2e5c3d', '#7a6b3a', '#9a8b4a'
-      ];
-
-      function render(dados) {
-        const keyFuneraria = getKey(dados[0], 'FunerÃ¡ria', 'Funerária', 'Funer');
-        const keySepultamento = getKey(dados[0], 'Local do Sepultamento', 'Sepultamento');
-        const keyFalecimento = getKey(dados[0], 'Data de Falecimento', 'Falecimento');
-        const keyNome = getKey(dados[0], 'Nome');
-
-        document.getElementById('total-registros').textContent = dados.length;
-        const funerarias = new Set(dados.map(d => (d[keyFuneraria] || '').trim()));
-        const cemiterios = new Set(dados.map(d => (d[keySepultamento] || '').trim()));
-        document.getElementById('total-funerarias').textContent = funerarias.size;
-        document.getElementById('total-cemiterios').textContent = cemiterios.size;
-
-        const porFuneraria = agruparContagem(dados, keyFuneraria);
-        const porCemiterio = agruparContagem(dados, keySepultamento);
-        const porData = agruparContagem(dados, keyFalecimento);
-        const top5 = porFuneraria.slice(0, 5);
-
-        const chartRefs = {};
-        function destroyChart(id) {
-          if (chartRefs[id] && typeof chartRefs[id].destroy === 'function') {
-            chartRefs[id].destroy();
-            chartRefs[id] = null;
-          }
-        }
-
-        function createBarChart(canvasId, labels, values, title, color) {
-          const canvas = document.getElementById(canvasId);
-          if (!canvas) return;
-          destroyChart(canvasId);
-          const ctx = canvas.getContext('2d');
-          chartRefs[canvasId] = new Chart(ctx, {
-            type: 'bar',
-            data: {
-              labels: labels.map(l => l.length > 35 ? l.slice(0, 32) + '…' : l),
-              datasets: [{
-                label: title,
-                data: values,
-                backgroundColor: color || accentColors[0],
-                borderColor: 'transparent',
-                borderWidth: 0,
-                borderRadius: 6,
-              }]
-            },
-            options: {
-              indexAxis: 'y',
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                legend: { display: false }
-              },
-              scales: {
-                x: {
-                  grid: { color: 'rgba(255,255,255,0.06)' },
-                  ticks: { color: '#9b9893', font: { size: 11 } }
-                },
-                y: {
-                  grid: { display: false },
-                  ticks: { color: '#9b9893', font: { size: 11 }, maxRotation: 0 }
-                }
-              }
-            }
-          });
-        }
-
-        function createPieChart(canvasId, labels, values) {
-          const canvas = document.getElementById(canvasId);
-          if (!canvas) return;
-          destroyChart(canvasId);
-          const ctx = canvas.getContext('2d');
-          chartRefs[canvasId] = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-              labels: labels.map(l => l.length > 30 ? l.slice(0, 27) + '…' : l),
-              datasets: [{
-                data: values,
-                backgroundColor: accentColors.slice(0, labels.length),
-                borderColor: 'var(--surface)',
-                borderWidth: 2,
-                hoverOffset: 4
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                legend: { position: 'right', labels: { color: '#9b9893', font: { size: 11 }, padding: 8 } }
-              }
-            }
-          });
-        }
-
-        try {
-          createBarChart('chart-funeraria', porFuneraria.map(x => x[0]), porFuneraria.map(x => x[1]), 'Sepultamentos', accentColors[0]);
-          createBarChart('chart-cemiterio', porCemiterio.map(x => x[0]), porCemiterio.map(x => x[1]), 'Sepultamentos', accentColors[2]);
-          createBarChart('chart-data', porData.map(x => x[0]), porData.map(x => x[1]), 'Quantidade', accentColors[1]);
-          createPieChart('chart-top5', top5.map(x => x[0]), top5.map(x => x[1]));
-        } catch (e) {
-          console.error('Erro ao criar gráficos:', e);
-        }
-
-        const tbody = document.getElementById('table-body');
-        tbody.innerHTML = dados.map((row, i) => `
-          <tr>
-            <td class="mono">${i + 1}</td>
-            <td>${(row[keyNome] || '-')}</td>
-            <td class="mono">${(row[keyFalecimento] || '-')}</td>
-            <td>${(row[keyFuneraria] || '-')}</td>
-            <td>${(row[keySepultamento] || '-')}</td>
-          </tr>
-        `).join('');
       }
 
       init();
