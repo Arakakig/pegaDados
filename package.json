@@ -1,0 +1,24 @@
+{
+  "name": "pegadados",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "scraper": "node script.js",
+    "dashboard": "npx serve . -p 3000",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "Coleta diária de dados SCS Web e dashboard de sepultamentos",
+  "dependencies": {
+    "express": "^4.21.0",
+    "node-cron": "^3.0.3",
+    "playwright": "^1.58.2"
+  }
+}

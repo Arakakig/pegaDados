@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Sepultamentos (Ontem)</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0f12;
+      --surface: #18181c;
+      --surface2: #222228;
+      --text: #e8e6e3;
+      --text-muted: #9b9893;
+      --accent: #c9a227;
+      --accent-dim: #8b7324;
+      --success: #5a9b6e;
+      --border: #2e2e34;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    header {
+      margin-bottom: 2.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+
+    .subtitle {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+    }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .kpi {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+
+    .kpi__value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.75rem;
+      font-weight: 500;
+      color: var(--accent);
+    }
+
+    .kpi__label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 0.25rem;
+    }
+
+    .charts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    @media (max-width: 900px) {
+      .charts {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      overflow: hidden;
+    }
+
+    .card__title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--text);
+    }
+
+    .chart-wrap {
+      position: relative;
+      height: 320px;
+    }
+
+    .loading, .error {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+    }
+
+    .error {
+      color: #c75c5c;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: var(--surface2);
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: rgba(201, 162, 39, 0.06);
+    }
+
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Dashboard — Sepultamentos</h1>
+      <p class="subtitle">Dados da aba &quot;Ontem&quot; — SCS Web</p>
+    </header>
+
+    <div id="loading" class="loading">Carregando dados...</div>
+    <div id="error" class="error" style="display: none;"></div>
+    <div id="app" style="display: none;">
+      <div class="kpis">
+        <div class="kpi">
+          <div class="kpi__value" id="total-registros">0</div>
+          <div class="kpi__label">Total de registros</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi__value" id="total-funerarias">0</div>
+          <div class="kpi__label">Funerárias distintas</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi__value" id="total-cemiterios">0</div>
+          <div class="kpi__label">Locais de sepultamento</div>
+        </div>
+      </div>
+
+      <div class="charts">
+        <div class="card">
+          <h2 class="card__title">Sepultamentos por funerária</h2>
+          <div class="chart-wrap">
+            <canvas id="chart-funeraria"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <h2 class="card__title">Sepultamentos por local (cemitério)</h2>
+          <div class="chart-wrap">
+            <canvas id="chart-cemiterio"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="charts">
+        <div class="card">
+          <h2 class="card__title">Por data de falecimento</h2>
+          <div class="chart-wrap">
+            <canvas id="chart-data"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <h2 class="card__title">Top 5 funerárias (resumo)</h2>
+          <div class="chart-wrap">
+            <canvas id="chart-top5"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: 1.5rem;">
+        <h2 class="card__title">Lista de registros</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Nome</th>
+                <th>Data falec.</th>
+                <th>Funerária</th>
+                <th>Local sepult.</th>
+              </tr>
+            </thead>
+            <tbody id="table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const loading = document.getElementById('loading');
+      const errorEl = document.getElementById('error');
+      const app = document.getElementById('app');
+
+      function getKey(obj, ...candidates) {
+        const keys = Object.keys(obj || {});
+        for (const c of candidates) {
+          const found = keys.find(k => k.includes(c) || k === c);
+          if (found) return found;
+        }
+        return candidates[0];
+      }
+
+      function agruparContagem(dados, key) {
+        const map = {};
+        dados.forEach(item => {
+          const v = (item[key] || 'Não informado').trim();
+          map[v] = (map[v] || 0) + 1;
+        });
+        return Object.entries(map).sort((a, b) => b[1] - a[1]);
+      }
+
+      function init() {
+        fetch('dados_ontem.json')
+          .then(r => {
+            if (!r.ok) throw new Error('Arquivo dados_ontem.json não encontrado. Execute o script.js primeiro.');
+            return r.json();
+          })
+          .then(dados => {
+            if (!Array.isArray(dados) || dados.length === 0) {
+              throw new Error('Nenhum registro em dados_ontem.json.');
+            }
+            loading.style.display = 'none';
+            app.style.display = 'block';
+            render(dados);
+          })
+          .catch(err => {
+            loading.style.display = 'none';
+            errorEl.style.display = 'block';
+            errorEl.textContent = err.message || 'Erro ao carregar dados.';
+          });
+      }
+
+      const accentColors = [
+        '#c9a227', '#a68b3c', '#8b7324', '#6b5a1e', '#5a4d1a',
+        '#4a8b5c', '#3d7550', '#2e5c3d', '#7a6b3a', '#9a8b4a'
+      ];
+
+      function render(dados) {
+        const keyFuneraria = getKey(dados[0], 'FunerÃ¡ria', 'Funerária', 'Funer');
+        const keySepultamento = getKey(dados[0], 'Local do Sepultamento', 'Sepultamento');
+        const keyFalecimento = getKey(dados[0], 'Data de Falecimento', 'Falecimento');
+        const keyNome = getKey(dados[0], 'Nome');
+
+        document.getElementById('total-registros').textContent = dados.length;
+        const funerarias = new Set(dados.map(d => (d[keyFuneraria] || '').trim()));
+        const cemiterios = new Set(dados.map(d => (d[keySepultamento] || '').trim()));
+        document.getElementById('total-funerarias').textContent = funerarias.size;
+        document.getElementById('total-cemiterios').textContent = cemiterios.size;
+
+        const porFuneraria = agruparContagem(dados, keyFuneraria);
+        const porCemiterio = agruparContagem(dados, keySepultamento);
+        const porData = agruparContagem(dados, keyFalecimento);
+        const top5 = porFuneraria.slice(0, 5);
+
+        const chartRefs = {};
+        function destroyChart(id) {
+          if (chartRefs[id] && typeof chartRefs[id].destroy === 'function') {
+            chartRefs[id].destroy();
+            chartRefs[id] = null;
+          }
+        }
+
+        function createBarChart(canvasId, labels, values, title, color) {
+          const canvas = document.getElementById(canvasId);
+          if (!canvas) return;
+          destroyChart(canvasId);
+          const ctx = canvas.getContext('2d');
+          chartRefs[canvasId] = new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: labels.map(l => l.length > 35 ? l.slice(0, 32) + '…' : l),
+              datasets: [{
+                label: title,
+                data: values,
+                backgroundColor: color || accentColors[0],
+                borderColor: 'transparent',
+                borderWidth: 0,
+                borderRadius: 6,
+              }]
+            },
+            options: {
+              indexAxis: 'y',
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false }
+              },
+              scales: {
+                x: {
+                  grid: { color: 'rgba(255,255,255,0.06)' },
+                  ticks: { color: '#9b9893', font: { size: 11 } }
+                },
+                y: {
+                  grid: { display: false },
+                  ticks: { color: '#9b9893', font: { size: 11 }, maxRotation: 0 }
+                }
+              }
+            }
+          });
+        }
+
+        function createPieChart(canvasId, labels, values) {
+          const canvas = document.getElementById(canvasId);
+          if (!canvas) return;
+          destroyChart(canvasId);
+          const ctx = canvas.getContext('2d');
+          chartRefs[canvasId] = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+              labels: labels.map(l => l.length > 30 ? l.slice(0, 27) + '…' : l),
+              datasets: [{
+                data: values,
+                backgroundColor: accentColors.slice(0, labels.length),
+                borderColor: 'var(--surface)',
+                borderWidth: 2,
+                hoverOffset: 4
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { position: 'right', labels: { color: '#9b9893', font: { size: 11 }, padding: 8 } }
+              }
+            }
+          });
+        }
+
+        try {
+          createBarChart('chart-funeraria', porFuneraria.map(x => x[0]), porFuneraria.map(x => x[1]), 'Sepultamentos', accentColors[0]);
+          createBarChart('chart-cemiterio', porCemiterio.map(x => x[0]), porCemiterio.map(x => x[1]), 'Sepultamentos', accentColors[2]);
+          createBarChart('chart-data', porData.map(x => x[0]), porData.map(x => x[1]), 'Quantidade', accentColors[1]);
+          createPieChart('chart-top5', top5.map(x => x[0]), top5.map(x => x[1]));
+        } catch (e) {
+          console.error('Erro ao criar gráficos:', e);
+        }
+
+        const tbody = document.getElementById('table-body');
+        tbody.innerHTML = dados.map((row, i) => `
+          <tr>
+            <td class="mono">${i + 1}</td>
+            <td>${(row[keyNome] || '-')}</td>
+            <td class="mono">${(row[keyFalecimento] || '-')}</td>
+            <td>${(row[keyFuneraria] || '-')}</td>
+            <td>${(row[keySepultamento] || '-')}</td>
+          </tr>
+        `).join('');
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>
